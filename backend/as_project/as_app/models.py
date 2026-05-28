@@ -11,7 +11,7 @@ class User(AbstractUser):
 
 
 class ShippingAddress(models.Model):
-    user = models.ForeignKey(User, on_delete=models.Cascade, related_name='shipping_addresses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shipping_addresses')
     street_address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
@@ -55,7 +55,7 @@ class Product(models.Model):
 
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.Cascade, related_name='images')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')
     is_featured = models.BooleanField(default=False)
 
@@ -64,7 +64,7 @@ class ProductImage(models.Model):
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.Cascade, related_name='cart')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -73,8 +73,8 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.Cascade, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.Cascade)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
 
     def __str__(self):
@@ -102,7 +102,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.Cascade, related_name='items')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True) 
     product_name = models.CharField(max_length=255) 
     price = models.DecimalField(max_digits=10, decimal_places=2) 
