@@ -84,3 +84,14 @@ def login_view(request):
             return Response({"message": "Login successful", "tokens": tokens, "user": serialized_user}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    try:
+        refresh_token = request.data.get('refresh')
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        return Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
