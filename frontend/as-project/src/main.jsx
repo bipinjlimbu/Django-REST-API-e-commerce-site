@@ -7,15 +7,12 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import './index.css';
 import GuestRoute from './components/GuestRoute';
-import LogoutButton from './components/LogoutButton';
 
 const Dashboard = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold">Welcome to the Dashboard!</h1>
       <p className="text-gray-600">This area is fully protected by your auth context system.</p>
-
-      <LogoutButton />
     </div>
   );
 };
