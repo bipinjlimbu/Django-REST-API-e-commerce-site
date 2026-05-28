@@ -2,9 +2,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from ..models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from ..serializers import UserSerializer
+# from ..serializers import UserSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re
 
@@ -14,20 +14,20 @@ def register_view(request):
     errors = {}
     if request.method == 'POST':
         username = request.data.get('username')
-        first_name = request.data.get('first_name')
-        last_name = request.data.get('last_name')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
         email = request.data.get('email')
         password = request.data.get('password')
         confirm_password = request.data.get('confirm_password')
-        phone_number = request.data.get('phone_number')
+        phone_number = request.data.get('phone_number', '')
         
-        username_pattern = re.compile(r'^[a-zA-Z0-9_]+$')
+        username_pattern = re.compile(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')
         if not username:
             errors['username'] = 'Username is required.'
         elif User.objects.filter(username=username).exists():
             errors['username'] = 'Username already exists.'
         elif not username_pattern.match(username):
-            errors['username'] = 'Username can only contain letters, numbers, and underscores.'
+            errors['username'] = 'Username must contain at least one letter and one number.'
         
         email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$') 
         if not email:
