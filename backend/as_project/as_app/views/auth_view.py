@@ -53,5 +53,11 @@ def register_view(request):
         
         return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
     
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
     
-            
+    
