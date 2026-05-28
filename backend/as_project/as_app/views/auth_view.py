@@ -76,7 +76,7 @@ def login_view(request):
         if errors:
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(username=username, password=password)
         
         if user is not None:
             tokens = get_tokens_for_user(user)
