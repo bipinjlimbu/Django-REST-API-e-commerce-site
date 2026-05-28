@@ -8,15 +8,7 @@ import Login from './pages/Login';
 import './index.css';
 import GuestRoute from './components/GuestRoute';
 import MainLayout from './layout/MainLayout';
-
-const Dashboard = () => {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Welcome to the Dashboard!</h1>
-      <p className="text-gray-600">This area is fully protected by your auth context system.</p>
-    </div>
-  );
-};
+import Home from './pages/Home';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -24,16 +16,17 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <Routes>
           <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
             <Route element={<GuestRoute />}>
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
             </Route>
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
             </Route>
 
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Route>
         </Routes>
       </AuthProvider>

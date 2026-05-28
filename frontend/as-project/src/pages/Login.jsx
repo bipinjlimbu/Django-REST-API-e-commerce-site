@@ -51,7 +51,7 @@ const Login = () => {
 
             // Direct route transition to your dashboard
             setTimeout(() => {
-                navigate('/dashboard');
+                navigate('/');
             }, 1000);
 
         } catch (err) {

@@ -31,7 +31,7 @@ const Navbar = () => {
         } finally {
             logout();
             setIsLoggingOut(false);
-            navigate('/login', { replace: true });
+            navigate('/', { replace: true });
         }
     };
 
