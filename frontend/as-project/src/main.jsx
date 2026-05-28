@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import './index.css';
 import GuestRoute from './components/GuestRoute';
+import MainLayout from './layout/MainLayout';
 
 const Dashboard = () => {
   return (
@@ -22,16 +23,18 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route element={<GuestRoute />}>
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-          </Route>
+          <Route element={<MainLayout />}>
+            <Route element={<GuestRoute />}>
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+            </Route>
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>
