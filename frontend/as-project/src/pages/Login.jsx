@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
-        username: '',
+        username: '', // This can accept either username or email now
         password: '',
     });
 
@@ -15,7 +20,6 @@ const Login = () => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
-        // Clear field-specific error as user types
         if (errors[name]) {
             setErrors({ ...errors, [name]: '' });
         }
@@ -38,24 +42,23 @@ const Login = () => {
                 }
             );
 
-            setSuccessMessage(response.data.message || 'Login successful');
+            setSuccessMessage('Login successful! Redirecting...');
 
-            // Save JWT tokens and user profile data to localStorage
-            localStorage.setItem('access_token', response.data.tokens.access);
-            localStorage.setItem('refresh_token', response.data.tokens.refresh);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            // Pass the verified user data and tokens into the global auth system
+            login(response.data.user, response.data.tokens);
 
             setFormData({ username: '', password: '' });
 
-            // Optional: Redirect your user here if using react-router-dom
-            // navigate('/dashboard');
+            // Direct route transition to your dashboard
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1000);
 
         } catch (err) {
             if (err.response && err.response.data) {
-                // Maps backend errors like errors['username'], errors['password'] or {"error": "Invalid credentials"}
                 setErrors(err.response.data);
             } else {
-                setErrors({ global: 'Something went wrong. Is your server running?' });
+                setErrors({ global: 'Unable to connect to authentication server.' });
             }
         } finally {
             setIsLoading(false);
@@ -78,43 +81,41 @@ const Login = () => {
                         </div>
                     )}
 
-                    {errors.error && (
+                    {(errors.error || errors.global) && (
                         <div className="rounded-md bg-red-50 p-3 text-center text-sm font-medium text-red-800">
-                            {errors.error}
-                        </div>
-                    )}
-
-                    {errors.global && (
-                        <div className="rounded-md bg-red-50 p-3 text-center text-sm font-medium text-red-800">
-                            {errors.global}
+                            {errors.error || errors.global}
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Username</label>
+                        <label htmlFor="username-field" className="block text-sm font-medium text-gray-700">
+                            Username or Email
+                        </label>
                         <input
+                            id="username-field"
                             type="text"
                             name="username"
+                            autoComplete="username"
                             value={formData.username}
                             onChange={handleChange}
-                            className={`mt-1 block w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 text-sm ${errors.username
-                                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                            className={`mt-1 block w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 text-sm ${errors.username ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
                                 }`}
                         />
                         {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <label htmlFor="password-field" className="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
                         <input
+                            id="password-field"
                             type="password"
                             name="password"
+                            autoComplete="current-password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`mt-1 block w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 text-sm ${errors.password
-                                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                            className={`mt-1 block w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 text-sm ${errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
                                 }`}
                         />
                         {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
@@ -124,7 +125,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                            className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-400"
                         >
                             {isLoading ? 'Signing in...' : 'Sign In'}
                         </button>
