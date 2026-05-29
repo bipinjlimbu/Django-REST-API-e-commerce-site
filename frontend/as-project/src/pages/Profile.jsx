@@ -15,7 +15,8 @@ import {
     X,
     Check,
     Loader2,
-    AlertTriangle
+    AlertTriangle,
+    LayoutDashboard // Added for the Dashboard button icon
 } from 'lucide-react';
 
 const Profile = () => {
@@ -157,6 +158,14 @@ const Profile = () => {
         }
     };
 
+    const handleDashboardRedirect = () => {
+        if (user?.is_staff || user?.is_superuser) {
+            navigate('/dashboard/admin');
+        } else {
+            navigate('/dashboard');
+        }
+    };
+
     // LOGOUT
     const handleLogoutClick = async () => {
         setIsLoggingOut(true);
@@ -261,6 +270,15 @@ const Profile = () => {
 
                     {/* ACTION BUTTONS */}
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-center">
+
+                        {/* ACCESSIBLE DASHBOARD BUTTON */}
+                        <button
+                            onClick={handleDashboardRedirect}
+                            className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700 transition-all w-full sm:w-auto"
+                        >
+                            <LayoutDashboard size={14} /> Dashboard
+                        </button>
+
                         {!isEditing ? (
                             <button
                                 onClick={() => setIsEditing(true)}
@@ -435,7 +453,7 @@ const Profile = () => {
                         </div>
                     </form>
 
-                    {/* RIGHT: ACCOUNT SIDEBAR WIDGETS (RESTORED COLUMN) */}
+                    {/* RIGHT: ACCOUNT SIDEBAR WIDGETS */}
                     <div className="space-y-6 md:col-span-1">
 
                         {/* ORDER METRICS */}
