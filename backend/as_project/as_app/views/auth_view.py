@@ -96,7 +96,7 @@ def logout_view(request):
     except Exception as e:
         return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
     
-@api_view(['PUT'])
+@api_view(['PUT','DELETE'])
 @permission_classes([IsAuthenticated])
 def profile_view(request, user_id):
     user = User.objects.get(id=user_id)
@@ -142,3 +142,7 @@ def profile_view(request, user_id):
         serialized_user = UserSerializer(user, context={'request': request})
         
         return Response({'message': 'Profile updated successfully', 'user': serialized_user.data}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'DELETE':
+        user.delete()
+        return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
