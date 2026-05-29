@@ -9,6 +9,7 @@ import './index.css';
 import GuestRoute from './components/GuestRoute';
 import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
+import Profile from './pages/Profile';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -23,7 +24,7 @@ createRoot(document.getElementById('root')).render(
             </Route>
 
             <Route element={<ProtectedRoute />}>
-              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
