@@ -103,17 +103,6 @@ const Navbar = () => {
                                         </span>
                                     )}
                                 </Link>
-
-                                <button
-                                    onClick={handleLogout}
-                                    disabled={isLoggingOut}
-                                    className="flex items-center space-x-1 rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
-                                >
-                                    {isLoggingOut ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
-                                    <span className="hidden sm:inline">
-                                        {isLoggingOut ? 'Signing out...' : 'Logout'}
-                                    </span>
-                                </button>
                             </div>
                         ) : (
                             /* LOGGED OUT VIEW */

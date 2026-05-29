@@ -45,7 +45,7 @@ const Profile = () => {
         try {
             // Adjust endpoint route according to your Django API structure
             const response = await axios.put(
-                'http://127.0.0.1:8000/api/profile/update/',
+                `http://127.0.0.1:8000/api/profile/${user.id}/`,
                 formData,
                 {
                     headers: {
@@ -106,7 +106,7 @@ const Profile = () => {
 
         try {
             // Targets user detail deletion API
-            await axios.delete('http://127.0.0.1:8000/api/profile/delete/', {
+            await axios.delete(`http://127.0.0.1:8000/api/profile/${user.id}/`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
 
@@ -222,8 +222,8 @@ const Profile = () => {
                                         value={formData.first_name}
                                         onChange={handleChange}
                                         className={`w-full text-sm font-semibold rounded-lg px-3.5 py-2 border transition-all ${isEditing
-                                                ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
-                                                : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
+                                            ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
+                                            : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
                                             }`}
                                     />
                                 </div>
@@ -239,8 +239,8 @@ const Profile = () => {
                                         value={formData.last_name}
                                         onChange={handleChange}
                                         className={`w-full text-sm font-semibold rounded-lg px-3.5 py-2 border transition-all ${isEditing
-                                                ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
-                                                : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
+                                            ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
+                                            : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
                                             }`}
                                     />
                                 </div>
@@ -256,8 +256,8 @@ const Profile = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         className={`w-full text-sm font-semibold rounded-lg px-3.5 py-2 border transition-all ${isEditing
-                                                ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
-                                                : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
+                                            ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
+                                            : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
                                             }`}
                                     />
                                     {errors.email && <p className="text-xs font-semibold text-red-600 mt-1">{errors.email}</p>}
@@ -274,8 +274,8 @@ const Profile = () => {
                                         value={formData.phone_number}
                                         onChange={handleChange}
                                         className={`w-full text-sm font-semibold rounded-lg px-3.5 py-2 border transition-all ${isEditing
-                                                ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
-                                                : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
+                                            ? 'border-gray-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-gray-900'
+                                            : 'border-transparent bg-gray-50 text-gray-700 cursor-not-allowed'
                                             }`}
                                     />
                                 </div>
