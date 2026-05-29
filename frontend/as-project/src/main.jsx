@@ -10,6 +10,7 @@ import GuestRoute from './components/GuestRoute';
 import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -25,6 +26,8 @@ createRoot(document.getElementById('root')).render(
 
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<div>Dashboard - User View</div>} />
+              <Route path="/dashboard/admin" element={<AdminDashboard />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
