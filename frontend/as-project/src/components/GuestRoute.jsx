@@ -15,7 +15,7 @@ const GuestRoute = () => {
         );
     }
 
-    return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
+    return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 };
 
 export default GuestRoute;
