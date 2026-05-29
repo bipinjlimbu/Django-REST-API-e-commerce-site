@@ -15,7 +15,7 @@ const ProtectedRoute = () => {
     }
 
     // If not authenticated, force them to the login page
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+    return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 export default ProtectedRoute;
