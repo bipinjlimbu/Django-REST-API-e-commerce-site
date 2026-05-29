@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, Users, Settings, ShieldAlert, ChevronRight, LogOut } from 'lucide-react';
 
 // Import our standalone section modules
-import AdminOverview from './dashboard/AdminOverview';
-import AdminOrders from './dashboard/AdminOrders';
-import AdminUsers from './dashboard/AdminUsers';
-import AdminCatalog from './dashboard/AdminCatalog';
+import AdminOverview from '../dashboard/AdminOverview';
+import AdminOrders from '../dashboard/AdminOrders';
+import AdminUsers from '../dashboard/AdminUsers';
+import AdminCatalog from '../dashboard/AdminCatalog';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
