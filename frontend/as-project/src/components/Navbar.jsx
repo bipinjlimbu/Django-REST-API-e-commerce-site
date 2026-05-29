@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingCart, LogOut, User, Search, LogIn, UserPlus } from 'lucide-react';
+import { ShoppingCart, LogOut, Search, LogIn, UserPlus, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
 const Navbar = () => {
@@ -38,7 +38,6 @@ const Navbar = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         console.log("Searching ApexStriker for:", searchQuery);
-        // Implement your e-commerce product search routing here
     };
 
     return (
@@ -48,7 +47,7 @@ const Navbar = () => {
 
                     {/* Brand Logo */}
                     <div className="flex-shrink-0 flex items-center">
-                        <Link to="/dashboard" className="text-2xl font-black text-red-600 tracking-wider font-sans uppercase">
+                        <Link to="/" className="text-2xl font-black text-red-600 tracking-wider font-sans uppercase">
                             Apex<span className="text-gray-900">Striker</span>
                         </Link>
                     </div>
@@ -72,7 +71,7 @@ const Navbar = () => {
                     {/* Navigation Actions Profile */}
                     <div className="flex items-center space-x-4">
 
-                        {/* Shopping Cart (Always visible in B2C layout) */}
+                        {/* Shopping Cart */}
                         <Link to="/cart" className="relative p-2 text-gray-600 hover:text-red-600 transition-colors">
                             <ShoppingCart size={22} />
                             <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
@@ -86,19 +85,31 @@ const Navbar = () => {
                         {isAuthenticated ? (
                             /* LOGGED IN VIEW */
                             <div className="flex items-center space-x-4">
-                                <div className="hidden sm:flex items-center space-x-1.5 text-sm text-gray-600">
-                                    <User size={16} className="text-gray-400" />
-                                    <span>
-                                        Hi, <span className="font-semibold text-gray-900">{user?.username || 'User'}</span>
-                                    </span>
-                                </div>
+                                {/* Clickable Avatar Profile Circle */}
+                                <Link
+                                    to="/profile"
+                                    className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-transparent hover:ring-red-600 transition-all overflow-hidden focus:outline-none"
+                                    title="View Profile"
+                                >
+                                    {user?.profile_picture ? (
+                                        <img
+                                            src={user.profile_picture}
+                                            alt={user?.username}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-xs font-bold uppercase tracking-wider text-white">
+                                            {user?.username ? user.username.substring(0, 2) : 'AS'}
+                                        </span>
+                                    )}
+                                </Link>
 
                                 <button
                                     onClick={handleLogout}
                                     disabled={isLoggingOut}
                                     className="flex items-center space-x-1 rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
                                 >
-                                    <LogOut size={16} />
+                                    {isLoggingOut ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
                                     <span className="hidden sm:inline">
                                         {isLoggingOut ? 'Signing out...' : 'Logout'}
                                     </span>
