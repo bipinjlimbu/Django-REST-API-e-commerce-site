@@ -10,31 +10,6 @@ const Navbar = () => {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const handleLogout = async () => {
-        setIsLoggingOut(true);
-        const accessToken = localStorage.getItem('access_token');
-        const refreshToken = localStorage.getItem('refresh_token');
-
-        try {
-            await axios.post(
-                'http://127.0.0.1:8000/api/logout/',
-                { refresh: refreshToken },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-        } catch (error) {
-            console.error("Backend blacklist failed:", error);
-        } finally {
-            logout();
-            setIsLoggingOut(false);
-            navigate('/', { replace: true });
-        }
-    };
-
     const handleSearch = (e) => {
         e.preventDefault();
         console.log("Searching ApexStriker for:", searchQuery);
