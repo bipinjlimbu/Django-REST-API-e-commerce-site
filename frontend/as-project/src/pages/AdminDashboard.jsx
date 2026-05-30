@@ -7,6 +7,7 @@ import AdminOverview from '../dashboard/AdminOverview';
 import AdminOrders from '../dashboard/AdminOrders';
 import AdminUsers from '../dashboard/AdminUsers';
 import AdminCatalog from '../dashboard/AdminCatalog';
+import AdminProducts from '../dashboard/AdminProducts';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
     // Section Mapper dictionary
     const sections = {
         users: <AdminUsers />,
+        products: <AdminProducts />,
         overview: <AdminOverview />,
         orders: <AdminOrders />,
         catalog: <AdminCatalog />
@@ -22,6 +24,7 @@ const AdminDashboard = () => {
 
     const menuItems = [
         { id: 'users', name: 'User Index', icon: Users },
+        { id: 'products', name: 'Product Index', icon: Package },
         { id: 'overview', name: 'Overview Matrix', icon: LayoutDashboard },
         { id: 'orders', name: 'Orders Queue', icon: Package },
         { id: 'catalog', name: 'Catalog Edit', icon: Settings },
