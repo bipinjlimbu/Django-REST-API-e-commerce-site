@@ -8,6 +8,7 @@ import AdminOrders from '../dashboard/AdminOrders';
 import AdminUsers from '../dashboard/AdminUsers';
 import AdminCatalog from '../dashboard/AdminCatalog';
 import AdminProducts from '../dashboard/AdminProducts';
+import AdminCategories from '../dashboard/AdminCategories';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const AdminDashboard = () => {
     const sections = {
         users: <AdminUsers />,
         products: <AdminProducts />,
+        categories: <AdminCategories />,
         overview: <AdminOverview />,
         orders: <AdminOrders />,
         catalog: <AdminCatalog />
@@ -25,6 +27,7 @@ const AdminDashboard = () => {
     const menuItems = [
         { id: 'users', name: 'User Index', icon: Users },
         { id: 'products', name: 'Product Index', icon: Package },
+        { id: 'categories', name: 'Category Index', icon: Settings },
         { id: 'overview', name: 'Overview Matrix', icon: LayoutDashboard },
         { id: 'orders', name: 'Orders Queue', icon: Package },
         { id: 'catalog', name: 'Catalog Edit', icon: Settings },
