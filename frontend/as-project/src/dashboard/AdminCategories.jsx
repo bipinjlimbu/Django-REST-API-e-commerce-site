@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plus, Edit2, Trash2, Link, Folder, Calendar } from 'lucide-react';
+import AdminAddCategory from './AdminAddCategory'; // Imports your form component directly
 
 const AdminCategories = () => {
     // 1. DATA STATE (Directly mirrors your updated flat Category model)
@@ -12,6 +13,9 @@ const AdminCategories = () => {
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    // VIEW STATE ROUTING SWITCH: 'list' displays the table, 'add' displays the form
+    const [currentStep, setCurrentStep] = useState('list');
 
     // 2. HANDLERS (Local state mutations - ready to point to your Django endpoints)
     const handleDeleteCategory = (id) => {
@@ -26,6 +30,22 @@ const AdminCategories = () => {
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.slug.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // ==========================================
+    // SUB-STEP INTERCEPT RENDERING
+    // ==========================================
+    if (currentStep === 'add') {
+        return (
+            <AdminAddCategory
+                onBack={() => setCurrentStep('list')}
+                onCategoryAdded={(newCategoryInstance) => {
+                    // Prepend newly initialized API model instance into active list buffer state
+                    setCategories([newCategoryInstance, ...categories]);
+                    setCurrentStep('list');
+                }}
+            />
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -47,7 +67,11 @@ const AdminCategories = () => {
                             className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600"
                         />
                     </div>
-                    <button className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-all w-full sm:w-auto">
+                    {/* TRIGGER SUB-VIEW STEP ROUTING TO FORM */}
+                    <button
+                        onClick={() => setCurrentStep('add')}
+                        className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-all w-full sm:w-auto"
+                    >
                         <Plus size={14} /> Add Category
                     </button>
                 </div>
