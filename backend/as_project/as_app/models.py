@@ -30,7 +30,6 @@ class ShippingAddress(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True)
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategories')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
