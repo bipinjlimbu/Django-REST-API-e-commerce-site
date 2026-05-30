@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from ..models import User, Category
-from ..serializers import UserSerializer
+from ..serializers import UserSerializer, CategorySerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re
    
@@ -49,9 +49,9 @@ def profile_view(request, user_id):
             user.profile_picture = profile_picture
         user.save()
         
-        serialized_user = UserSerializer(user, context={'request': request})
+        serialized_user = UserSerializer(user, context={'request': request}).data
         
-        return Response({'message': 'Profile updated successfully', 'user': serialized_user.data}, status=status.HTTP_200_OK)
+        return Response({'message': 'Profile updated successfully', 'user': serialized_user}, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         user.delete()
@@ -79,5 +79,5 @@ def category_view(request):
             return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
         
         category = Category.objects.create(name=name, slug=slug)
-        serialized_category = category_serializer(category).data
+        serialized_category = CategorySerializer(category).data
         return Response({'message': 'Category created successfully', 'category': serialized_category}, status=status.HTTP_201_CREATED)
