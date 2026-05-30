@@ -1,46 +1,64 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit2, Trash2, Link, Folder, Calendar } from 'lucide-react';
-import AdminAddCategory from './AdminAddCategory'; // Imports your form component directly
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Search, Plus, Edit2, Trash2, Link, Folder, Calendar, Loader2 } from 'lucide-react';
+import AdminAddCategory from './AdminAddCategory';
 
 const AdminCategories = () => {
-    // 1. DATA STATE (Directly mirrors your updated flat Category model)
-    const [categories, setCategories] = useState([
-        { id: 1, name: "Footwear", slug: "footwear", created_at: "2026-01-10" },
-        { id: 2, name: "Football Cleats", slug: "football-cleats", created_at: "2026-01-12" },
-        { id: 3, name: "Apparel", slug: "apparel", created_at: "2026-02-05" },
-        { id: 4, name: "Compression Wear", slug: "compression-wear", created_at: "2026-02-20" },
-        { id: 5, name: "Equipment", slug: "equipment", created_at: "2026-03-01" },
-    ]);
-
+    const [categories, setCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-
-    // VIEW STATE ROUTING SWITCH: 'list' displays the table, 'add' displays the form
     const [currentStep, setCurrentStep] = useState('list');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // 2. HANDLERS (Local state mutations - ready to point to your Django endpoints)
-    const handleDeleteCategory = (id) => {
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            try {
+                const response = await axios.get('http://127.0.0.1:8000/api/category/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                setCategories(response.data.categories || []);
+            } catch (err) {
+                setError('Failed to load categories from the server.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    const handleDeleteCategory = async (id) => {
         if (window.confirm("Are you sure you want to delete this category? Any linked products will have their category field set to null (models.SET_NULL).")) {
-            // Swap with: axios.delete(`/api/categories/${id}/`)
-            setCategories(categories.filter(c => c.id !== id));
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/category/${id}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                setCategories(prev => prev.filter(c => c.id !== id));
+            } catch (err) {
+                alert('Failed to delete the category. Please try again.');
+            }
         }
     };
 
-    // 3. SEARCH FILTER MECHANICS
-    const filteredCategories = categories.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.slug.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCategories = categories.filter(c => {
+        const name = c?.name?.toLowerCase() || '';
+        const slug = c?.slug?.toLowerCase() || '';
+        const search = searchTerm.toLowerCase();
+        return name.includes(search) || slug.includes(search);
+    });
 
-    // ==========================================
-    // SUB-STEP INTERCEPT RENDERING
-    // ==========================================
     if (currentStep === 'add') {
         return (
             <AdminAddCategory
                 onBack={() => setCurrentStep('list')}
                 onCategoryAdded={(newCategoryInstance) => {
-                    // Prepend newly initialized API model instance into active list buffer state
-                    setCategories([newCategoryInstance, ...categories]);
+                    setCategories(prev => [newCategoryInstance, ...prev]);
                     setCurrentStep('list');
                 }}
             />
@@ -50,7 +68,6 @@ const AdminCategories = () => {
     return (
         <div className="space-y-6">
 
-            {/* CONTROL HEADBAR ACTIONS */}
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-gray-900">ApexStriker Taxonomies</h3>
@@ -67,7 +84,6 @@ const AdminCategories = () => {
                             className="w-full pl-9 pr-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600"
                         />
                     </div>
-                    {/* TRIGGER SUB-VIEW STEP ROUTING TO FORM */}
                     <button
                         onClick={() => setCurrentStep('add')}
                         className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-all w-full sm:w-auto"
@@ -77,7 +93,6 @@ const AdminCategories = () => {
                 </div>
             </div>
 
-            {/* DATABASE RECORD TABLE */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -90,11 +105,24 @@ const AdminCategories = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50 text-xs font-bold text-gray-700">
-                            {filteredCategories.length > 0 ? (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="4" className="p-12 text-center text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50/10">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Loader2 size={16} className="animate-spin text-red-600" />
+                                            <span>Loading system models...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="4" className="p-12 text-center text-xs font-bold text-red-600 uppercase tracking-widest bg-gray-50/10">
+                                        {error}
+                                    </td>
+                                </tr>
+                            ) : filteredCategories.length > 0 ? (
                                 filteredCategories.map((cat) => (
                                     <tr key={cat.id} className="hover:bg-gray-50/30 transition-colors">
-
-                                        {/* Name field layout with simplified icon mapping */}
                                         <td className="p-4 pl-6">
                                             <div className="flex items-center gap-2.5">
                                                 <div className="w-7 h-7 rounded-md bg-red-50 border border-red-100 text-red-600 flex items-center justify-center">
@@ -107,24 +135,18 @@ const AdminCategories = () => {
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {/* Slug Column mapping unique URL tokens */}
                                         <td className="p-4 font-mono text-[11px] text-gray-500">
                                             <div className="flex items-center gap-1">
                                                 <Link size={10} className="text-gray-400" />
                                                 <span>{cat.slug}</span>
                                             </div>
                                         </td>
-
-                                        {/* Created At Timestamp Column */}
                                         <td className="p-4 font-medium text-gray-400 text-[11px]">
                                             <div className="flex items-center gap-1">
                                                 <Calendar size={11} className="text-gray-300" />
-                                                <span>{cat.created_at}</span>
+                                                <span>{cat.created_at ? new Date(cat.created_at).toLocaleDateString() : 'N/A'}</span>
                                             </div>
                                         </td>
-
-                                        {/* Control Triggers */}
                                         <td className="p-4 pr-6 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
@@ -143,7 +165,6 @@ const AdminCategories = () => {
                                                 </button>
                                             </div>
                                         </td>
-
                                     </tr>
                                 ))
                             ) : (
