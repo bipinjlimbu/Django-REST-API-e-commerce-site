@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
-from ..models import User
+from ..models import User, Category
 from ..serializers import UserSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re
@@ -56,3 +56,28 @@ def profile_view(request, user_id):
     elif request.method == 'DELETE':
         user.delete()
         return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def category_view(request):
+    errors = {}
+    if request.method == 'POST':
+        name = request.data.get('name')
+        slug = request.data.get('slug')
+        
+        if not name:
+            errors['name'] = 'Name is required.'
+        elif Category.objects.filter(name=name).exists():
+            errors['name'] = 'Category name already exists.'
+            
+        if not slug:
+            errors['slug'] = 'Slug is required.'
+        elif Category.objects.filter(slug=slug).exists():
+            errors['slug'] = 'Category slug already exists.'
+            
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        category = Category.objects.create(name=name, slug=slug)
+        serialized_category = category_serializer(category).data
+        return Response({'message': 'Category created successfully', 'category': serialized_category}, status=status.HTTP_201_CREATED)
