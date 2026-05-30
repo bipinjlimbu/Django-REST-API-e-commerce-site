@@ -10,20 +10,20 @@ import AdminCatalog from '../dashboard/AdminCatalog';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('users');
 
     // Section Mapper dictionary
     const sections = {
+        users: <AdminUsers />,
         overview: <AdminOverview />,
         orders: <AdminOrders />,
-        users: <AdminUsers />,
         catalog: <AdminCatalog />
     };
 
     const menuItems = [
+        { id: 'users', name: 'User Index', icon: Users },
         { id: 'overview', name: 'Overview Matrix', icon: LayoutDashboard },
         { id: 'orders', name: 'Orders Queue', icon: Package },
-        { id: 'users', name: 'User Index', icon: Users },
         { id: 'catalog', name: 'Catalog Edit', icon: Settings },
     ];
 
@@ -67,7 +67,7 @@ const AdminDashboard = () => {
 
                 {/* MODULAR SECTION WORKSPACE */}
                 <div className="flex-1 min-w-0">
-                    {sections[activeTab] || <AdminOverview />}
+                    {sections[activeTab] || <AdminUsers />}
                 </div>
 
             </div>
