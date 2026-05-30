@@ -86,3 +86,15 @@ def category_view(request):
         categories = Category.objects.all()
         serialized_categories = CategorySerializer(categories, many=True).data
         return Response({'categories': serialized_categories}, status=status.HTTP_200_OK)
+    
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def single_category_view(request, category_id):
+    try:
+        category = Category.objects.get(id=category_id)
+    except Category.DoesNotExist:
+        return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'DELETE':
+        category.delete()
+        return Response({'message': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
