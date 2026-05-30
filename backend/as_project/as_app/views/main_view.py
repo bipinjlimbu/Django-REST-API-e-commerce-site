@@ -57,7 +57,7 @@ def profile_view(request, user_id):
         user.delete()
         return Response({'message': 'User deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 def category_view(request):
     errors = {}
@@ -81,3 +81,8 @@ def category_view(request):
         category = Category.objects.create(name=name, slug=slug)
         serialized_category = CategorySerializer(category).data
         return Response({'message': 'Category created successfully', 'category': serialized_category}, status=status.HTTP_201_CREATED)
+    
+    elif request.method == 'GET':
+        categories = Category.objects.all()
+        serialized_categories = CategorySerializer(categories, many=True).data
+        return Response({'categories': serialized_categories}, status=status.HTTP_200_OK)
