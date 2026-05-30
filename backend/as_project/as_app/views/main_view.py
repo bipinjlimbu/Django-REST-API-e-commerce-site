@@ -87,7 +87,7 @@ def category_view(request):
         serialized_categories = CategorySerializer(categories, many=True).data
         return Response({'categories': serialized_categories}, status=status.HTTP_200_OK)
     
-@api_view(['DELETE'])
+@api_view(['PUT', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_category_view(request, category_id):
     try:
@@ -95,6 +95,31 @@ def single_category_view(request, category_id):
     except Category.DoesNotExist:
         return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    if request.method == 'DELETE':
+    errors = {}
+    if request.method == 'PUT':
+        name = request.data.get('name')
+        slug = request.data.get('slug')
+        
+        if not name:
+            errors['name'] = 'Name is required.'
+        elif Category.objects.filter(name=name).exclude(id=category.id).exists():
+            errors['name'] = 'Category name already exists.'
+            
+        if not slug:
+            errors['slug'] = 'Slug is required.'
+        elif Category.objects.filter(slug=slug).exclude(id=category.id).exists():
+            errors['slug'] = 'Category slug already exists.'
+            
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        category.name = name
+        category.slug = slug
+        category.save()
+        
+        serialized_category = CategorySerializer(category).data
+        return Response({'message': 'Category updated successfully', 'category': serialized_category}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'DELETE':
         category.delete()
         return Response({'message': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
