@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { api } from '../context/AuthContext';
 import { ArrowLeft, Plus, Folder, Link as LinkIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const AdminAddCategory = ({ onBack, onCategoryAdded }) => {
@@ -14,7 +14,6 @@ const AdminAddCategory = ({ onBack, onCategoryAdded }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         let updatedData = { ...formData, [name]: value };
 
         if (name === 'name') {
@@ -44,15 +43,9 @@ const AdminAddCategory = ({ onBack, onCategoryAdded }) => {
         setErrors({});
         setIsLoading(true);
 
-        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/category/', formData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            // Using api instance drops manual token configuration and absolute domains
+            const response = await api.post('/api/category/', formData);
 
             setSuccessMessage(response.data.message || 'Category created successfully!');
 
