@@ -6,9 +6,9 @@ from ..serializers import UserSerializer, CategorySerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re
    
-@api_view(['PUT','DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def profile_view(request, user_id):
+def single_profile_view(request, user_id):
     user = User.objects.get(id=user_id)
     
     errors = {}
@@ -52,6 +52,10 @@ def profile_view(request, user_id):
         serialized_user = UserSerializer(user, context={'request': request}).data
         
         return Response({'message': 'Profile updated successfully', 'user': serialized_user}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':
+        serialized_user = UserSerializer(user, context={'request': request}).data
+        return Response({'user': serialized_user}, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         user.delete()
