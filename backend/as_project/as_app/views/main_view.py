@@ -87,7 +87,7 @@ def category_view(request):
         serialized_categories = CategorySerializer(categories, many=True).data
         return Response({'categories': serialized_categories}, status=status.HTTP_200_OK)
     
-@api_view(['PUT', 'DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_category_view(request, category_id):
     try:
@@ -119,6 +119,10 @@ def single_category_view(request, category_id):
         
         serialized_category = CategorySerializer(category).data
         return Response({'message': 'Category updated successfully', 'category': serialized_category}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':
+        serialized_category = CategorySerializer(category).data
+        return Response({'category': serialized_category}, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         category.delete()
