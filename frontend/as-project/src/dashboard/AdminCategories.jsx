@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// 1. IMPORT YOUR CUSTOM AXIOS INSTANCE INSTEAD OF RAW AXIOS
+import { api } from '../context/AuthContext';
 import { Search, Plus, Edit2, Trash2, Link, Folder, Calendar, Loader2 } from 'lucide-react';
 import AdminAddCategory from './AdminAddCategory';
 
@@ -12,16 +13,15 @@ const AdminCategories = () => {
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            setIsLoading(true);
+            setError(null);
             try {
-                const response = await axios.get('http://127.0.0.1:8000/api/category/', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // 2. USE THE INTERCEPTOR INSTANCE. NO MANUAL HEADERS NEEDED!
+                const response = await api.get('/api/category/');
                 setCategories(response.data.categories || []);
             } catch (err) {
-                setError('Failed to load categories from the server.');
+                // Checking for explicit server message, fallback to generic
+                setError(err.response?.data?.detail || 'Failed to load categories from the server.');
             } finally {
                 setIsLoading(false);
             }
@@ -32,16 +32,12 @@ const AdminCategories = () => {
 
     const handleDeleteCategory = async (id) => {
         if (window.confirm("Are you sure you want to delete this category? Any linked products will have their category field set to null (models.SET_NULL).")) {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/category/${id}/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // 3. CLEAN DELETE CALL WITH THE WRAPPED INSTANCE
+                await api.delete(`/api/category/${id}/`);
                 setCategories(prev => prev.filter(c => c.id !== id));
             } catch (err) {
-                alert('Failed to delete the category. Please try again.');
+                alert(err.response?.data?.detail || 'Failed to delete the category. Please try again.');
             }
         }
     };
@@ -67,7 +63,7 @@ const AdminCategories = () => {
 
     return (
         <div className="space-y-6">
-
+            {/* Header Control Panel */}
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-gray-900">ApexStriker Taxonomies</h3>
@@ -93,6 +89,7 @@ const AdminCategories = () => {
                 </div>
             </div>
 
+            {/* Data Table Container */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -178,7 +175,6 @@ const AdminCategories = () => {
                     </table>
                 </div>
             </div>
-
         </div>
     );
 };
