@@ -6,6 +6,14 @@ from ..serializers import UserSerializer, CategorySerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re
    
+   
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def user_view(request):
+    users = User.objects.all()
+    serialized_users = UserSerializer(users, many=True, context={'request': request}).data
+    return Response({'users': serialized_users}, status=status.HTTP_200_OK)
+
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def single_profile_view(request, user_id):
