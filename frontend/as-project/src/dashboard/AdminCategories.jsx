@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-// 1. IMPORT YOUR CUSTOM AXIOS INSTANCE INSTEAD OF RAW AXIOS
+// IMPORT YOUR CUSTOM AXIOS INSTANCE INSTEAD OF RAW AXIOS
 import { api } from '../context/AuthContext';
 import { Search, Plus, Edit2, Trash2, Link, Folder, Calendar, Loader2 } from 'lucide-react';
 import AdminAddCategory from './AdminAddCategory';
+import AdminEditCategory from './AdminEditCategory'; // Imported Edit Component
 
 const AdminCategories = () => {
     const [categories, setCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentStep, setCurrentStep] = useState('list');
+    const [currentStep, setCurrentStep] = useState('list'); // 'list' | 'add' | 'edit'
+    const [selectedCategoryId, setSelectedCategoryId] = useState(null); // Track targeted entity ID
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -16,7 +18,7 @@ const AdminCategories = () => {
             setIsLoading(true);
             setError(null);
             try {
-                // 2. USE THE INTERCEPTOR INSTANCE. NO MANUAL HEADERS NEEDED!
+                // USE THE INTERCEPTOR INSTANCE. NO MANUAL HEADERS NEEDED!
                 const response = await api.get('/api/category/');
                 setCategories(response.data.categories || []);
             } catch (err) {
@@ -33,7 +35,7 @@ const AdminCategories = () => {
     const handleDeleteCategory = async (id) => {
         if (window.confirm("Are you sure you want to delete this category? Any linked products will have their category field set to null (models.SET_NULL).")) {
             try {
-                // 3. CLEAN DELETE CALL WITH THE WRAPPED INSTANCE
+                // CLEAN DELETE CALL WITH THE WRAPPED INSTANCE
                 await api.delete(`/api/category/${id}/`);
                 setCategories(prev => prev.filter(c => c.id !== id));
             } catch (err) {
@@ -49,6 +51,7 @@ const AdminCategories = () => {
         return name.includes(search) || slug.includes(search);
     });
 
+    // STEP CONTROLLER: ADD NEW NODE
     if (currentStep === 'add') {
         return (
             <AdminAddCategory
@@ -56,6 +59,27 @@ const AdminCategories = () => {
                 onCategoryAdded={(newCategoryInstance) => {
                     setCategories(prev => [newCategoryInstance, ...prev]);
                     setCurrentStep('list');
+                }}
+            />
+        );
+    }
+
+    // STEP CONTROLLER: PATCH EDIT EXISTING NODE
+    if (currentStep === 'edit') {
+        return (
+            <AdminEditCategory
+                categoryId={selectedCategoryId}
+                onBack={() => {
+                    setCurrentStep('list');
+                    setSelectedCategoryId(null);
+                }}
+                onCategoryUpdated={(updatedCategoryInstance) => {
+                    // Instantly sync state mutations down to our local catalog map
+                    setCategories(prev =>
+                        prev.map(c => c.id === updatedCategoryInstance.id ? updatedCategoryInstance : c)
+                    );
+                    setCurrentStep('list');
+                    setSelectedCategoryId(null);
                 }}
             />
         );
@@ -147,7 +171,10 @@ const AdminCategories = () => {
                                         <td className="p-4 pr-6 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => alert(`Modify category entry properties for ID: ${cat.id}`)}
+                                                    onClick={() => {
+                                                        setSelectedCategoryId(cat.id);
+                                                        setCurrentStep('edit');
+                                                    }}
                                                     title="Modify Properties"
                                                     className="p-1.5 rounded-md border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-all"
                                                 >
