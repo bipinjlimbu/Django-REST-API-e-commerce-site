@@ -48,9 +48,14 @@ const AdminUsers = () => {
         }
     };
 
-    const handleDeleteUser = (id) => {
+    const handleDeleteUser = async (id) => {
         if (window.confirm("Are you sure you want to remove this user profile from ApexStriker local memory?")) {
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+            try {
+                await api.delete(`/api/profile/${id}/`);
+                setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+            } catch (err) {
+                alert(err.response?.data?.detail || 'Failed to delete user profile.');
+            }
         }
     };
 
