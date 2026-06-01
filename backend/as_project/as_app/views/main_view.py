@@ -151,6 +151,7 @@ def product_view(request):
     errors = {}
     if request.method == 'POST':
         category = request.data.get('category')
+        product_image = request.FILES.get('product_image')
         name = request.data.get('name')
         slug = request.data.get('slug')
         description = request.data.get('description')
@@ -163,6 +164,9 @@ def product_view(request):
         elif not Category.objects.filter(id=category).exists():
             errors['category'] = 'Category does not exist.'
             
+        if not product_image:
+            errors['product_image'] = 'Product image is required.'
+        
         if not name:
             errors['name'] = 'Name is required.'
         
@@ -184,6 +188,7 @@ def product_view(request):
         
         product = Product.objects.create(
             category_id=category,
+            product_image=product_image,
             name=name,
             slug=slug,
             description=description,
