@@ -14,7 +14,7 @@ def user_view(request):
     serialized_users = UserSerializer(users, many=True, context={'request': request}).data
     return Response({'users': serialized_users}, status=status.HTTP_200_OK)
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET','PATCH','PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def single_profile_view(request, user_id):
     user = User.objects.get(id=user_id)
@@ -64,6 +64,12 @@ def single_profile_view(request, user_id):
     elif request.method == 'GET':
         serialized_user = UserSerializer(user, context={'request': request}).data
         return Response({'user': serialized_user}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PATCH':
+        user.is_active = not user.is_active
+        user.save()
+        status_message = 'activated' if user.is_active else 'suspended'
+        return Response({'message': f'User account {status_message} successfully'}, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         user.delete()
