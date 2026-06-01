@@ -196,10 +196,10 @@ def product_view(request):
             stock=stock,
             is_active=is_active
         )
-        serialized_product = ProductSerializer(product).data
+        serialized_product = ProductSerializer(product, context={'request': request}).data
         return Response({'message': 'Product created successfully', 'product': serialized_product}, status=status.HTTP_201_CREATED)
             
     elif request.method == 'GET':
         products = Product.objects.all()
-        serialized_products = ProductSerializer(products, many=True).data
+        serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
