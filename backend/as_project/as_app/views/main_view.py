@@ -145,7 +145,7 @@ def single_category_view(request, category_id):
         category.delete()
         return Response({'message': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 def product_view(request):
     errors = {}
@@ -199,3 +199,7 @@ def product_view(request):
         serialized_product = ProductSerializer(product).data
         return Response({'message': 'Product created successfully', 'product': serialized_product}, status=status.HTTP_201_CREATED)
             
+    elif request.method == 'GET':
+        products = Product.objects.all()
+        serialized_products = ProductSerializer(products, many=True).data
+        return Response({'products': serialized_products}, status=status.HTTP_200_OK)
