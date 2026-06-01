@@ -31,17 +31,21 @@ const AdminUsers = () => {
     }, []);
 
     // LOCAL HANDLERS (Handles layout mutations purely on state level)
-    const handleToggleStatus = (id) => {
-        setUsers(prevUsers => prevUsers.map(user => {
-            if (user.id === id) {
-                // Handles fallback checks for either custom status or standard is_active flags
-                if (user.status !== undefined) {
-                    return { ...user, status: user.status === 'active' ? 'suspended' : 'active' };
+    const handleToggleStatus = async (id) => {
+        try {
+            // Fires PATCH request directly to your profile detail endpoint
+            await api.patch(`/api/profile/${id}/`);
+
+            // Inverts the local state toggle instantly upon a successful 200 OK response
+            setUsers(prevUsers => prevUsers.map(user => {
+                if (user.id === id) {
+                    return { ...user, is_active: !user.is_active };
                 }
-                return { ...user, is_active: !user.is_active };
-            }
-            return user;
-        }));
+                return user;
+            }));
+        } catch (err) {
+            alert(err.response?.data?.detail || 'Failed to modify account authorization status.');
+        }
     };
 
     const handleDeleteUser = (id) => {
