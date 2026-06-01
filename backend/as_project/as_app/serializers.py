@@ -31,3 +31,16 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+        
+    def get_product_image(self, obj):
+        request = self.context.get('request')
+
+        if obj.product_image:
+            url = obj.product_image.url
+
+            if request:
+                return request.build_absolute_uri(url)
+
+            return url
+
+        return None
