@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 // IMPORTING THE INTERCEPTED AXIOS INSTANCE
 import { api } from '../context/AuthContext';
-import { ArrowLeft, PlusCircle, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, AlertCircle, Image as ImageIcon, X } from 'lucide-react';
 
 const AdminAddProduct = ({ onBack, onProductAdded }) => {
-    // 1. FORM STATE MATCHING YOUR DJANGO MODEL FIELDS
+    // 1. FORM STATE FIELDS INCLUDING IMAGE REFERENCE
     const [formData, setFormData] = useState({
         category: '',
         name: '',
@@ -15,19 +15,27 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
         is_active: true
     });
 
+    const [imageFile, setImageFile] = useState(null); // Actual binary file for Django storage
+    const [imagePreview, setImagePreview] = useState(null); // Local blob URL for UI preview
+
     const [categories, setCategories] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 2. FETCH ACTIVE CATEGORIES FOR THE LOOKUP DROPDOWN
+    // DUMMY FALLBACK CATEGORIES IN CASE ENDPOINT FALLS BACK DURING DISCOVERY
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await api.get('/api/category/');
                 setCategories(response.data.categories || response.data || []);
             } catch (err) {
-                console.error("Failed fetching categories for lookup:", err);
+                console.error("Failed fetching categories, loading fallback presets:", err);
+                setCategories([
+                    { id: 1, name: "Footwear / Cleats" },
+                    { id: 2, name: "Apparel & Jerseys" },
+                    { id: 3, name: "Equipment & Gear" }
+                ]);
             } finally {
                 setCategoriesLoading(false);
             }
@@ -35,14 +43,14 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
         fetchCategories();
     }, []);
 
-    // 3. AUTO-GENERATE SLUG FROM PRODUCT NAME
+    // 2. AUTO-GENERATE SLUG FROM PRODUCT NAME
     const handleNameChange = (e) => {
         const nameVal = e.target.value;
         const slugVal = nameVal
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-            .replace(/\s+/g, '-')         // Replace spaces with dashes
-            .replace(/-+/g, '-');         // Remove duplicate dashes
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
 
         setFormData(prev => ({
             ...prev,
@@ -59,27 +67,53 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
         }));
     };
 
-    // 4. SUBMIT PROTOCOL OVER THE WIRE
+    // 3. IMAGE FILE PROCESSING LOADER
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file)); // Generate browser visual memory address
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        if (imagePreview) URL.revokeObjectURL(imagePreview); // Clean memory garbage strings
+        setImagePreview(null);
+    };
+
+    // 4. SUBMIT PROTOCOL OVER MULTIPART/FORM-DATA
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         setError(null);
 
-        // Sanitize Payload constraints for Django REST format
-        const payload = {
-            ...formData,
-            category: formData.category === '' ? null : parseInt(formData.category, 10),
-            price: parseFloat(formData.price),
-            stock: parseInt(formData.stock, 10)
-        };
+        // ENCODE MULTIPART STREAM PIPELINE INSTEAD OF STANDARD RAW JSON
+        const dataPayload = new FormData();
+
+        // Append text node items
+        dataPayload.append('name', formData.name);
+        dataPayload.append('slug', formData.slug);
+        dataPayload.append('description', formData.description);
+        dataPayload.append('price', parseFloat(formData.price));
+        dataPayload.append('stock', parseInt(formData.stock, 10));
+        dataPayload.append('is_active', formData.is_active);
+
+        if (formData.category !== '') {
+            dataPayload.append('category', parseInt(formData.category, 10));
+        }
+
+        // Attach actual multi-media binary pointer if exists
+        if (imageFile) {
+            dataPayload.append('image', imageFile); // 'image' field matches Django model ImageField key
+        }
 
         try {
-            // Adjust this path if your product list view path varies
-            const response = await api.post('/api/products/', payload);
+            // Content-Type validation is automatically handled by browsers when sending FormData
+            const response = await api.post('/api/products/', dataPayload);
 
             alert('Product initialization complete. Added successfully.');
             if (onProductAdded) {
-                // Passes back the freshly serialized instance from your database
                 onProductAdded(response.data.product || response.data);
             }
         } catch (err) {
@@ -96,6 +130,7 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
             <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3">
                     <button
+                        type="button"
                         onClick={onBack}
                         className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-gray-50 transition-all"
                     >
@@ -116,6 +151,43 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
                         <span>{error}</span>
                     </div>
                 )}
+
+                {/* IMAGE UPLOAD SLOT SCHEMATICS CONTAINER */}
+                <div className="space-y-1.5">
+                    <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Catalog Media Resource</label>
+
+                    <div className="flex items-center gap-4">
+                        {imagePreview ? (
+                            <div className="relative w-24 h-24 border border-gray-200 rounded-xl overflow-hidden shadow-inner group">
+                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveImage}
+                                    className="absolute top-1 right-1 p-1 bg-black/70 text-white rounded-md hover:bg-red-600 transition-colors"
+                                    title="Remove asset"
+                                >
+                                    <X size={10} />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="w-24 h-24 border border-dashed border-gray-200 hover:border-red-400 bg-gray-50/50 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-all text-gray-400 hover:text-red-600">
+                                <ImageIcon size={16} />
+                                <span className="text-[9px] font-black uppercase tracking-wider">Upload</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                />
+                            </label>
+                        )}
+                        <div className="text-[11px] font-medium text-gray-400 space-y-0.5">
+                            <p className="text-gray-700 font-bold">Primary Hero Showcase Asset</p>
+                            <p>Accepts PNG, JPG, or WEBP representations.</p>
+                            <p>Dimensions normalized to 1:1 Aspect ratio inside layout pipelines.</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Name */}
