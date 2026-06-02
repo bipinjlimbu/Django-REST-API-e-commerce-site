@@ -203,3 +203,20 @@ def product_view(request):
         products = Product.objects.all()
         serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
+    
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def single_product_view(request, product_id):
+    product = Product.objects.get(id=product_id)
+    if not product:
+        return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        is_active = request.data.get('is_active')
+        if is_active is not None:
+            product.is_active = is_active
+            product.save()
+            status_message = 'activated' if product.is_active else 'deactivated'
+            return Response({'message': f'Product {status_message} successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'is_active field is required'}, status=status.HTTP_400_BAD_REQUEST)
