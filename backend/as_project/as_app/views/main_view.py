@@ -204,7 +204,7 @@ def product_view(request):
         serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
     
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_product_view(request, product_id):
     product = Product.objects.get(id=product_id)
@@ -220,3 +220,7 @@ def single_product_view(request, product_id):
             return Response({'message': f'Product {status_message} successfully'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'is_active field is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    elif request.method == 'DELETE':
+        product.delete()
+        return Response({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
