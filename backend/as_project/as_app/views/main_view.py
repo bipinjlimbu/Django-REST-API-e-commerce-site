@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
-from ..models import User, Category, Product
-from ..serializers import UserSerializer, CategorySerializer, ProductSerializer
+from ..models import User, Category, Product, Brands
+from ..serializers import UserSerializer, CategorySerializer, ProductSerializer, BrandSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 import re   
    
@@ -144,6 +144,31 @@ def single_category_view(request, category_id):
     elif request.method == 'DELETE':
         category.delete()
         return Response({'message': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def brand_view(request):
+    errors = {}
+    if request.method == 'POST':
+        name = request.data.get('name')
+        slug = request.data.get('slug')
+        
+        if not name:
+            errors['name'] = 'Name is required.'
+        elif Brands.objects.filter(name=name).exists():
+            errors['name'] = 'Brand name already exists.'
+            
+        if not slug:
+            errors['slug'] = 'Slug is required.'
+        elif Brands.objects.filter(slug=slug).exists():
+            errors['slug'] = 'Brand slug already exists.'
+            
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        brand = Brands.objects.create(name=name, slug=slug)
+        serialized_brand = BrandSerializer(brand).data
+        return Response({'message': 'Brand created successfully', 'brand': serialized_brand}, status=status.HTTP_201_CREATED)
     
 @api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
