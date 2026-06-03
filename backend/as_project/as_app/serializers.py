@@ -49,3 +49,16 @@ class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brands
         fields = "__all__"
+        
+    def get_brand_logo(self, obj):
+        request = self.context.get('request')
+
+        if obj.brand_logo:
+            url = obj.brand_logo.url
+
+            if request:
+                return request.build_absolute_uri(url)
+
+            return url
+
+        return None
