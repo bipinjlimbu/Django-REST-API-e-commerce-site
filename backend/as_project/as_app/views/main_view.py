@@ -196,6 +196,7 @@ def product_view(request):
     errors = {}
     if request.method == 'POST':
         category = request.data.get('category')
+        brand = request.data.get('brand')
         product_image = request.FILES.get('product_image')
         name = request.data.get('name')
         slug = request.data.get('slug')
@@ -208,6 +209,11 @@ def product_view(request):
             errors['category'] = 'Category is required.'
         elif not Category.objects.filter(id=category).exists():
             errors['category'] = 'Category does not exist.'
+            
+        if not brand:
+            errors['brand'] = 'Brand is required.'
+        elif not Brands.objects.filter(id=brand).exists():
+            errors['brand'] = 'Brand does not exist.'
             
         if not product_image:
             errors['product_image'] = 'Product image is required.'
@@ -233,6 +239,7 @@ def product_view(request):
         
         product = Product.objects.create(
             category_id=category,
+            brand_id=brand,
             product_image=product_image,
             name=name,
             slug=slug,
@@ -252,8 +259,9 @@ def product_view(request):
 @api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_product_view(request, product_id):
-    product = Product.objects.get(id=product_id)
-    if not product:
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
         return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PATCH':
