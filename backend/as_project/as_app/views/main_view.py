@@ -174,6 +174,11 @@ def brand_view(request):
         serialized_brand = BrandSerializer(brand, context={'request': request}).data
         return Response({'message': 'Brand created successfully', 'brand': serialized_brand}, status=status.HTTP_201_CREATED)
     
+    elif request.method == 'GET':
+        brands = Brands.objects.all()
+        serialized_brands = BrandSerializer(brands, many=True, context={'request': request}).data
+        return Response({'brands': serialized_brands}, status=status.HTTP_200_OK)
+    
 @api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 def product_view(request):
