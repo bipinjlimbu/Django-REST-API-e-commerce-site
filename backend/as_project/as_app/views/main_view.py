@@ -256,7 +256,7 @@ def product_view(request):
         serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
     
-@api_view(['GET','POST','PATCH', 'DELETE'])
+@api_view(['GET','PUT','PATCH', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_product_view(request, product_id):
     try:
@@ -265,7 +265,7 @@ def single_product_view(request, product_id):
         return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
     errors = {}
-    if request.method == 'POST':
+    if request.method == 'PUT':
         category = request.data.get('category')
         brand = request.data.get('brand')
         product_image = request.FILES.get('product_image')
@@ -285,16 +285,13 @@ def single_product_view(request, product_id):
             errors['brand'] = 'Brand is required.'
         elif not Brands.objects.filter(id=brand).exists():
             errors['brand'] = 'Brand does not exist.'
-            
-        if not product_image:
-            errors['product_image'] = 'Product image is required.'
         
         if not name:
             errors['name'] = 'Name is required.'
         
         if not slug:
             errors['slug'] = 'Slug is required.'
-        elif Product.objects.filter(slug=slug).exists():
+        elif Product.objects.filter(slug=slug).exclude(id=product.id).exists():
             errors['slug'] = 'Product slug already exists.'
             
         if price is None:
@@ -310,7 +307,10 @@ def single_product_view(request, product_id):
         
         product.category_id = category
         product.brand_id = brand
-        product.product_image = product_image
+        
+        if product_image:
+            product.product_image = product_image
+
         product.name = name
         product.slug = slug
         product.description = description
