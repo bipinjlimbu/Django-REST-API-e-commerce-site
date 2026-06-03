@@ -22,71 +22,89 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
 
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
-    const [categoriesLoading, setCategoriesLoading] = useState(true);
-    const [brandsLoading, setBrandsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // BACK-END VALIDATION OBJECT CAPTURE STATE
     const [fieldErrors, setFieldErrors] = useState({});
     const [generalError, setGeneralError] = useState(null);
 
-    // 2. FETCH TAXONOMY, BRAND DEFINITIONS AND CORE PRODUCT OBJECT
+    // 2. PARALLEL NETWORK PROMISE STREAM DISPATCH WITH DATA DOCKING MATRIX
     useEffect(() => {
+        let isMounted = true;
+
         const fetchAllNecessaryData = async () => {
             setIsPageLoading(true);
+            setGeneralError(null);
 
-            // A. Fetch Categories
             try {
-                const response = await api.get('/api/category/');
-                setCategories(response.data.categories || response.data || []);
-            } catch (err) {
-                console.error("Failed fetching categories:", err);
-            } finally {
-                setCategoriesLoading(false);
-            }
+                // Execute lookup lookups for categories, brands and target product in parallel
+                const [catRes, brandRes, productRes] = await Promise.all([
+                    api.get('/api/category/').catch(err => { console.error("Cat stream error:", err); return { data: [] }; }),
+                    api.get('/api/brand/').catch(err => { console.error("Brand stream error:", err); return { data: [] }; }),
+                    api.get(`/api/product/${productId}/`)
+                ]);
 
-            // B. Fetch Brands directly from API
-            try {
-                const response = await api.get('/api/brand/');
-                setBrands(response.data.brands || response.data || []);
-            } catch (err) {
-                console.error("Failed fetching brands:", err);
-            } finally {
-                setBrandsLoading(false);
-            }
+                if (!isMounted) return;
 
-            // C. Fetch Targeted Target Product Instance Object details
-            try {
-                const response = await api.get(`/api/product/${productId}/`);
-                const product = response.data;
+                // Normalize Categories
+                const rawCats = catRes.data?.categories || catRes.data?.results || catRes.data || [];
+                setCategories(Array.isArray(rawCats) ? rawCats : []);
 
-                // Extracting correct parameters or falling back to raw nested fields mapping structure
-                setFormData({
-                    category: product.category?.id || product.category || '',
-                    brand: product.brand?.id || product.brand || '',
-                    name: product.name || '',
-                    slug: product.slug || '',
-                    description: product.description || '',
-                    price: product.price || '',
-                    stock: product.stock !== undefined ? String(product.stock) : '0',
-                    is_active: !!product.is_active
-                });
+                // Normalize Brands
+                const rawBrands = brandRes.data?.brands || brandRes.data?.results || brandRes.data || [];
+                setBrands(Array.isArray(rawBrands) ? rawBrands : []);
 
-                if (product.product_image) {
-                    setExistingImageUrl(product.product_image);
+                // Map Product Target Payload Directly Into Forms Controlled Inputs Matrix
+                if (productRes && productRes.data) {
+                    // FALLBACK FOR NESTED DJANGO PACKETS RESPONSE
+                    // checking if target contains wrapped properties key like productRes.data.product
+                    const product = productRes.data.product || productRes.data;
+                    console.log("ApexStriker Extracted Real Dataset Payload:", product);
+
+                    // Explicit property re-mapping wrapper (Resolves Number to String select element blockage)
+                    const normalizedFormData = {
+                        category: product.category && typeof product.category === 'object'
+                            ? String(product.category.id || '')
+                            : (product.category ? String(product.category) : ''),
+                        brand: product.brand && typeof product.brand === 'object'
+                            ? String(product.brand.id || '')
+                            : (product.brand ? String(product.brand) : ''),
+                        name: String(product.name || ''),
+                        slug: String(product.slug || ''),
+                        description: String(product.description || ''),
+                        price: product.price !== undefined && product.price !== null ? String(product.price) : '',
+                        stock: product.stock !== undefined && product.stock !== null ? String(product.stock) : '0',
+                        is_active: product.is_active !== undefined ? !!product.is_active : true
+                    };
+
+                    console.log("Injecting Into State Node directly:", normalizedFormData);
+                    setFormData(normalizedFormData);
+
+                    // Media Resource Binding
+                    if (product.product_image) {
+                        setExistingImageUrl(product.product_image);
+                    } else if (product.image) {
+                        setExistingImageUrl(product.image);
+                    }
                 }
             } catch (err) {
-                console.error("Failed pulling target node specs:", err);
+                console.error("Critical trace caught loading layout structures:", err);
                 setGeneralError("Could not populate fields from single item tracker endpoint data stream.");
             } finally {
-                setIsPageLoading(false);
+                if (isMounted) {
+                    setIsPageLoading(false);
+                }
             }
         };
 
         if (productId) {
             fetchAllNecessaryData();
         }
+
+        return () => {
+            isMounted = false;
+        };
     }, [productId]);
 
     // 3. GENERATE UNIQUE CLEAN SLUG IN REALTIME ON MANUAL OVERRIDES
@@ -94,9 +112,9 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
         const nameVal = e.target.value;
         const slugVal = nameVal
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '') // Strips irregular punctuation markers
-            .replace(/\s+/g, '-')         // Blank whitespace blocks map to clean hyphens
-            .replace(/-+/g, '-');         // Deduplicate running dashes
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
 
         setFormData(prev => ({
             ...prev,
@@ -136,7 +154,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
         setImageFile(null);
         if (imagePreview) URL.revokeObjectURL(imagePreview);
         setImagePreview(null);
-        // Note: Keep existingImageUrl untouched unless required to clean data values on backend tracking blocks
+        setExistingImageUrl(null);
     };
 
     // 5. ENCODE MULTIPART STREAM FOR PUT/PATCH ACTIONS ACROSS THE NETWORK
@@ -157,24 +175,23 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
         if (formData.category) dataPayload.append('category', formData.category);
         if (formData.brand) dataPayload.append('brand', formData.brand);
 
-        // If a new binary block is loaded inside parameters matrix, pass it down network streams
         if (imageFile) {
             dataPayload.append('product_image', imageFile);
         }
 
         try {
-            // Using PUT or PATCH here to perform complete transaction update
             const response = await api.put(`/api/product/${productId}/`, dataPayload);
-            alert(response.data.message || 'Product catalog mutation state synchronization completed successfully.');
+            alert('Product catalog mutation state synchronization completed successfully.');
 
             if (onProductUpdated) {
-                // If API returns product directly inside response node wrap or flat object, propagate upstream to re-render DOM
                 onProductUpdated(response.data.product || response.data);
             }
         } catch (err) {
             const responseData = err.response?.data;
             if (responseData && responseData.errors) {
                 setFieldErrors(responseData.errors);
+            } else if (responseData && typeof responseData === 'object') {
+                setFieldErrors(responseData);
             } else {
                 setGeneralError(responseData?.detail || 'Payload mutations rejected by core router endpoints.');
             }
@@ -221,7 +238,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                     </div>
                 )}
 
-                {/* IMAGE INPUT FRAME WITH LIVE PREVIEWS OR BACKEND PERSISTED CACHE GRAPHICS */}
+                {/* IMAGE INPUT FRAME WITH LIVE PREVIEWS */}
                 <div className="space-y-1.5">
                     <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Catalog Media Resource</label>
                     <div className="flex items-center gap-4">
@@ -229,8 +246,12 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                             <div className="relative w-24 h-24 border border-gray-200 rounded-xl overflow-hidden shadow-inner group">
                                 <img
                                     src={imagePreview || existingImageUrl}
-                                    alt="Preview Node Representation"
+                                    alt="Preview Asset Frame"
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Prevents broken relative links if cloud static url structure lacks domain markers
+                                        console.log("Image source loading block caught:", e);
+                                    }}
                                 />
                                 <button
                                     type="button"
@@ -293,7 +314,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
 
                 {/* Row 2: Category, Brand, Price, Stock Configurations */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* Category Dropdown */}
+                    {/* Category Selection Dropdown */}
                     <div className="space-y-1.5">
                         <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Category *</label>
                         <select
@@ -304,16 +325,15 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                         >
                             <option value="">-- Category --</option>
                             {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
+                                <option key={cat.id} value={String(cat.id)}>
                                     {cat.name}
                                 </option>
                             ))}
                         </select>
-                        {categoriesLoading && <p className="text-[10px] text-gray-400 font-medium">Syncing...</p>}
                         {fieldErrors.category && <p className="text-[10px] font-bold text-red-600">{fieldErrors.category}</p>}
                     </div>
 
-                    {/* Brand Dynamic API Dropdown */}
+                    {/* Brand Selection Dropdown */}
                     <div className="space-y-1.5">
                         <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Brand *</label>
                         <select
@@ -324,16 +344,15 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                         >
                             <option value="">-- Brand --</option>
                             {brands.map((brnd) => (
-                                <option key={brnd.id} value={brnd.id}>
+                                <option key={brnd.id} value={String(brnd.id)}>
                                     {brnd.name}
                                 </option>
                             ))}
                         </select>
-                        {brandsLoading && <p className="text-[10px] text-gray-400 font-medium">Syncing...</p>}
                         {fieldErrors.brand && <p className="text-[10px] font-bold text-red-600">{fieldErrors.brand}</p>}
                     </div>
 
-                    {/* Price Input */}
+                    {/* Price Input Field */}
                     <div className="space-y-1.5">
                         <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Price (USD) *</label>
                         <input
@@ -348,7 +367,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                         {fieldErrors.price && <p className="text-[10px] font-bold text-red-600">{fieldErrors.price}</p>}
                     </div>
 
-                    {/* Stock Input */}
+                    {/* Stock Input Field */}
                     <div className="space-y-1.5">
                         <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Stock Units</label>
                         <input
@@ -362,7 +381,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                     </div>
                 </div>
 
-                {/* Row 3: Description Details */}
+                {/* Row 3: Catalog Description */}
                 <div className="space-y-1.5">
                     <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Catalog Description Details</label>
                     <textarea
@@ -375,7 +394,7 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                     />
                 </div>
 
-                {/* Availability Flag Checkbox */}
+                {/* Availability Live State Flag Toggle */}
                 <div className="flex items-center gap-2 pt-2">
                     <input
                         type="checkbox"
@@ -385,14 +404,14 @@ const AdminEditProduct = ({ productId, onBack, onProductUpdated }) => {
                         onChange={handleChange}
                         className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-600"
                     />
-                    <label htmlFor="is_active" className="text-xs font-black uppercase text-gray-900 selection:bg-transparent">
+                    <label htmlFor="is_active" className="text-xs font-black uppercase text-gray-900 selection:bg-transparent cursor-pointer select-none">
                         Expose Item Node (Set Active immediately to public catalogs)
                     </label>
                 </div>
 
                 <hr className="border-gray-100 pt-2" />
 
-                {/* Submissions Action Block */}
+                {/* Bottom Control Forms Submissions Action Block */}
                 <div className="flex items-center justify-end gap-2">
                     <button
                         type="button"
