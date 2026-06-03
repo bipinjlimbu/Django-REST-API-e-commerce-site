@@ -256,7 +256,7 @@ def product_view(request):
         serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
     
-@api_view(['PATCH', 'DELETE'])
+@api_view(['GET','PATCH', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_product_view(request, product_id):
     try:
@@ -264,7 +264,11 @@ def single_product_view(request, product_id):
     except Product.DoesNotExist:
         return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'PATCH':
+    if request.method == 'GET':
+        serialized_product = ProductSerializer(product, context={'request': request}).data
+        return Response({'product': serialized_product}, status=status.HTTP_200_OK)
+
+    elif request.method == 'PATCH':
         is_active = request.data.get('is_active')
         if is_active is not None:
             product.is_active = is_active
