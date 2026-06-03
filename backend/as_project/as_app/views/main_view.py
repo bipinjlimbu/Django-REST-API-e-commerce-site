@@ -256,7 +256,7 @@ def product_view(request):
         serialized_products = ProductSerializer(products, many=True, context={'request': request}).data
         return Response({'products': serialized_products}, status=status.HTTP_200_OK)
     
-@api_view(['GET','PATCH', 'DELETE'])
+@api_view(['GET','POST','PATCH', 'DELETE'])
 @permission_classes([IsAdminUser])
 def single_product_view(request, product_id):
     try:
@@ -264,7 +264,65 @@ def single_product_view(request, product_id):
     except Product.DoesNotExist:
         return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
+    errors = {}
+    if request.method == 'POST':
+        category = request.data.get('category')
+        brand = request.data.get('brand')
+        product_image = request.FILES.get('product_image')
+        name = request.data.get('name')
+        slug = request.data.get('slug')
+        description = request.data.get('description')
+        price = request.data.get('price')
+        stock = request.data.get('stock')
+        is_active = request.data.get('is_active', True)
+        
+        if not category:
+            errors['category'] = 'Category is required.'
+        elif not Category.objects.filter(id=category).exists():
+            errors['category'] = 'Category does not exist.'
+            
+        if not brand:
+            errors['brand'] = 'Brand is required.'
+        elif not Brands.objects.filter(id=brand).exists():
+            errors['brand'] = 'Brand does not exist.'
+            
+        if not product_image:
+            errors['product_image'] = 'Product image is required.'
+        
+        if not name:
+            errors['name'] = 'Name is required.'
+        
+        if not slug:
+            errors['slug'] = 'Slug is required.'
+        elif Product.objects.filter(slug=slug).exists():
+            errors['slug'] = 'Product slug already exists.'
+            
+        if price is None:
+            errors['price'] = 'Price is required.'
+        elif float(price) < 0:
+            errors['price'] = 'Price cannot be negative.'
+        
+        if stock is not None and int(stock) < 0:
+            errors['stock'] = 'Stock cannot be negative.'
+            
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        product.category_id = category
+        product.brand_id = brand
+        product.product_image = product_image
+        product.name = name
+        product.slug = slug
+        product.description = description
+        product.price = price
+        product.stock = stock
+        product.is_active = is_active
+        product.save()
+        
+        serialized_product = ProductSerializer(product, context={'request': request}).data
+        return Response({'message': 'Product updated successfully', 'product': serialized_product}, status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':
         serialized_product = ProductSerializer(product, context={'request': request}).data
         return Response({'product': serialized_product}, status=status.HTTP_200_OK)
 
