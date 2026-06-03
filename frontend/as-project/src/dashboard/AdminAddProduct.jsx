@@ -7,6 +7,7 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
     // 1. STATE CONFIGURATION TO TRACK FORM COMPONENT MATRIX
     const [formData, setFormData] = useState({
         category: '',
+        brand: '', // INITIALIZED BRAND ID
         name: '',
         slug: '',
         description: '',
@@ -19,27 +20,41 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
     const [imagePreview, setImagePreview] = useState(null);
 
     const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]); // BRAND ARRAY STATE
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [brandsLoading, setBrandsLoading] = useState(true); // BRAND LOADING STATE
 
     // BACK-END VALIDATION OBJECT CAPTURE STATE
     const [fieldErrors, setFieldErrors] = useState({});
     const [generalError, setGeneralError] = useState(null);
 
-    // 2. FETCH TAXONOMY DEFINITIONS FOR THE DROPDOWN
+    // 2. FETCH TAXONOMY & BRAND DEFINITIONS FOR DROPDOWNS
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchDropdownData = async () => {
+            // Fetch Categories
             try {
                 const response = await api.get('/api/category/');
-                // Match Django response envelope
                 setCategories(response.data.categories || response.data || []);
             } catch (err) {
                 console.error("Failed fetching categories:", err);
             } finally {
                 setCategoriesLoading(false);
             }
+
+            // FETCH BRANDS DIRECTLY FROM API
+            try {
+                const response = await api.get('/api/brand/'); // Match your Django URL endpoint
+                // Match regular response wrapper or list array structure
+                setBrands(response.data.brands || response.data || []);
+            } catch (err) {
+                console.error("Failed fetching brands:", err);
+            } finally {
+                setBrandsLoading(false);
+            }
         };
-        fetchCategories();
+
+        fetchDropdownData();
     }, []);
 
     // 3. GENERATE UNIQUE CLEAN SLUG IN REALTIME
@@ -57,7 +72,6 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
             slug: slugVal
         }));
 
-        // Flush target single field error marker once interacting
         if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: null }));
         if (fieldErrors.slug) setFieldErrors(prev => ({ ...prev, slug: null }));
     };
@@ -101,7 +115,6 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
 
         const dataPayload = new FormData();
 
-        // Append core taxonomy references 
         dataPayload.append('name', formData.name);
         dataPayload.append('slug', formData.slug);
         dataPayload.append('description', formData.description);
@@ -109,11 +122,9 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
         dataPayload.append('stock', formData.stock);
         dataPayload.append('is_active', formData.is_active ? '1' : '0');
 
-        if (formData.category) {
-            dataPayload.append('category', formData.category);
-        }
+        if (formData.category) dataPayload.append('category', formData.category);
+        if (formData.brand) dataPayload.append('brand', formData.brand); // SENT BRAND FIELD TO BACKEND
 
-        // MATCHING YOUR DJANGO LOGIC REQUEST KEY: request.FILES.get('product_image')
         if (imageFile) {
             dataPayload.append('product_image', imageFile);
         }
@@ -123,16 +134,14 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
             alert(response.data.message || 'Product initialization complete.');
 
             if (onProductAdded) {
-                // Return dynamic serialized node instance down to state ledger array mapping
                 onProductAdded(response.data.product);
             }
         } catch (err) {
             const responseData = err.response?.data;
             if (responseData && responseData.errors) {
-                // If Django view drops the custom parsed errors map object ({ errors: {...} })
                 setFieldErrors(responseData.errors);
             } else {
-                setGeneralError(responseData?.detail || 'Payload submission rejected by schema system validation.');
+                setGeneralError(responseData?.detail || 'Payload submission rejected.');
             }
         } finally {
             setIsSubmitting(false);
@@ -161,7 +170,6 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
             {/* Main Form Block */}
             <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5 text-xs font-bold text-gray-700">
 
-                {/* Fallback General Errors Alerts banner */}
                 {generalError && (
                     <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg flex items-center gap-2">
                         <AlertCircle size={14} />
@@ -169,7 +177,7 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
                     </div>
                 )}
 
-                {/* DYNAMIC IMAGE INPUT FRAME SLOT */}
+                {/* IMAGE INPUT FRAME */}
                 <div className="space-y-1.5">
                     <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Catalog Media Resource *</label>
                     <div className="flex items-center gap-4">
@@ -222,7 +230,7 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Slug Handle (Unique Url Lookup) *</label>
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Slug Handle *</label>
                         <input
                             type="text"
                             name="slug"
@@ -235,29 +243,51 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
                     </div>
                 </div>
 
-                {/* Row 2: Category, Price, Stock */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Row 2: Category, Brand, Price, Stock Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Category Dropdown */}
                     <div className="space-y-1.5">
-                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Taxonomy Category *</label>
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Category *</label>
                         <select
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600 font-semibold text-gray-900 ${fieldErrors.category ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'}`}
                         >
-                            <option value="">-- Choose Category --</option>
+                            <option value="">-- Category --</option>
                             {categories.map((cat) => (
                                 <option key={cat.id} value={cat.id}>
                                     {cat.name}
                                 </option>
                             ))}
                         </select>
-                        {categoriesLoading && <p className="text-[10px] text-gray-400 font-medium">Syncing live list...</p>}
+                        {categoriesLoading && <p className="text-[10px] text-gray-400 font-medium">Syncing...</p>}
                         {fieldErrors.category && <p className="text-[10px] font-bold text-red-600">{fieldErrors.category}</p>}
                     </div>
 
+                    {/* Brand Dynamic API Dropdown */}
                     <div className="space-y-1.5">
-                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Retail Price (USD) *</label>
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Brand *</label>
+                        <select
+                            name="brand"
+                            value={formData.brand}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600 font-semibold text-gray-900 ${fieldErrors.brand ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'}`}
+                        >
+                            <option value="">-- Brand --</option>
+                            {brands.map((brnd) => (
+                                <option key={brnd.id} value={brnd.id}>
+                                    {brnd.name}
+                                </option>
+                            ))}
+                        </select>
+                        {brandsLoading && <p className="text-[10px] text-gray-400 font-medium">Syncing...</p>}
+                        {fieldErrors.brand && <p className="text-[10px] font-bold text-red-600">{fieldErrors.brand}</p>}
+                    </div>
+
+                    {/* Price Input */}
+                    <div className="space-y-1.5">
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Price (USD) *</label>
                         <input
                             type="number"
                             step="0.01"
@@ -270,8 +300,9 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
                         {fieldErrors.price && <p className="text-[10px] font-bold text-red-600">{fieldErrors.price}</p>}
                     </div>
 
+                    {/* Stock Input */}
                     <div className="space-y-1.5">
-                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Stock Ledger Units</label>
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Stock Units</label>
                         <input
                             type="number"
                             name="stock"
