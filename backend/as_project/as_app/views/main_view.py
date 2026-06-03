@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
-from ..models import User, Category, Product, Brands
+from ..models import User, Category, Product, Brands, Cart, CartItem
 from ..serializers import UserSerializer, CategorySerializer, ProductSerializer, BrandSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from ..permissions import IsAdminOrReadOnly
@@ -340,3 +340,16 @@ def single_product_view(request, product_id):
     elif request.method == 'DELETE':
         product.delete()
         return Response({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_to_cart_view(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    Cart.objects.get_or_create(user=request.user)
+    CartItem.objects.create(cart=request.user.cart, product=product)
+    
+    return Response({'message': 'Product added to cart successfully'}, status=status.HTTP_200_OK)
