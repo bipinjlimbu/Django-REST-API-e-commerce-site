@@ -46,7 +46,14 @@ const Home = () => {
     }, []);
 
     const handleAddToCart = (productId) => {
-        console.log(`Product ${productId} added to cart Matrix!`);
+        api.post(`/api/add-to-cart/${productId}/`)
+            .then(response => {
+                alert("Product added to cart successfully!");
+            })
+            .catch(error => {
+                console.error("Failed to add product to cart:", error);
+                alert("Could not add product to cart. Please try again.");
+            });
     };
 
     const handleAdminRouteRedirect = (productId) => {
