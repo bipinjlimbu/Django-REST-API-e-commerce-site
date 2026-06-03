@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.auth_view import register_view, login_view, logout_view
-from .views.main_view import user_view, single_profile_view, category_view, single_category_view, product_view, single_product_view, brands_view
+from .views.main_view import user_view, single_profile_view, category_view, single_category_view, product_view, single_product_view, brand_view
 
 urlpatterns = [
     path('register/', register_view, name='register'),
@@ -12,5 +12,5 @@ urlpatterns = [
     path('category/<int:category_id>/', single_category_view, name='single_category'),
     path('product/', product_view, name='product'),
     path('product/<int:product_id>/', single_product_view, name='single_product'),
-    path('brand/', brands_view, name='brand'),
+    path('brand/', brand_view, name='brand'),
 ]
