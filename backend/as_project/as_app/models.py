@@ -40,6 +40,7 @@ class Category(models.Model):
 
 class Brands(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    brand_logo = models.ImageField(upload_to='brand_logos/', blank=True, null=True)
     slug = models.SlugField(max_length=120, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
