@@ -150,9 +150,13 @@ def single_category_view(request, category_id):
 def brand_view(request):
     errors = {}
     if request.method == 'POST':
+        brand_logo = request.FILES.get('brand_logo')
         name = request.data.get('name')
         slug = request.data.get('slug')
         
+        if not brand_logo:
+            errors['brand_logo'] = 'Brand logo is required.'
+            
         if not name:
             errors['name'] = 'Name is required.'
         elif Brands.objects.filter(name=name).exists():
@@ -166,8 +170,8 @@ def brand_view(request):
         if errors:
             return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
         
-        brand = Brands.objects.create(name=name, slug=slug)
-        serialized_brand = BrandSerializer(brand).data
+        brand = Brands.objects.create(brand_logo=brand_logo, name=name, slug=slug)
+        serialized_brand = BrandSerializer(brand, context={'request': request}).data
         return Response({'message': 'Brand created successfully', 'brand': serialized_brand}, status=status.HTTP_201_CREATED)
     
 @api_view(['GET', 'POST'])
