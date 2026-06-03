@@ -3,7 +3,8 @@ from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from ..models import User, Category, Product, Brands
 from ..serializers import UserSerializer, CategorySerializer, ProductSerializer, BrandSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from ..permissions import IsAdminOrReadOnly
 import re   
    
 @api_view(['GET'])
@@ -191,7 +192,7 @@ def single_brand_view(request, brand_id):
     return Response({'message': 'Brand deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
 @api_view(['GET', 'POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrReadOnly])
 def product_view(request):
     errors = {}
     if request.method == 'POST':
