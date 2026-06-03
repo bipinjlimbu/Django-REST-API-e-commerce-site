@@ -179,6 +179,17 @@ def brand_view(request):
         serialized_brands = BrandSerializer(brands, many=True, context={'request': request}).data
         return Response({'brands': serialized_brands}, status=status.HTTP_200_OK)
     
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def single_brand_view(request, brand_id):
+    try:
+        brand = Brands.objects.get(id=brand_id)
+    except Brands.DoesNotExist:
+        return Response({'error': 'Brand not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    brand.delete()
+    return Response({'message': 'Brand deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
 @api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 def product_view(request):
