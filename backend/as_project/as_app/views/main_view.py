@@ -145,7 +145,7 @@ def single_category_view(request, category_id):
         category.delete()
         return Response({'message': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser])
 def brand_view(request):
     errors = {}
