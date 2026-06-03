@@ -287,7 +287,7 @@ const AdminAddProduct = ({ onBack, onProductAdded }) => {
 
                     {/* Price Input */}
                     <div className="space-y-1.5">
-                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Price (USD) *</label>
+                        <label className="text-gray-500 uppercase tracking-wide text-[10px] font-black">Price (Rs) *</label>
                         <input
                             type="number"
                             step="0.01"

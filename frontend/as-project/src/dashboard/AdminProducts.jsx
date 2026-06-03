@@ -221,7 +221,7 @@ const AdminProducts = () => {
                                             </div>
                                         </td>
                                         <td className="p-4 text-gray-900 font-black">
-                                            ${typeof prod.price === 'number' ? prod.price.toFixed(2) : parseFloat(prod.price || 0).toFixed(2)}
+                                            Rs.{typeof prod.price === 'number' ? prod.price.toFixed(2) : parseFloat(prod.price || 0).toFixed(2)}
                                         </td>
                                         <td className="p-4 font-medium text-gray-500">
                                             <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${parseInt(prod.stock || 0) > 0 ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
