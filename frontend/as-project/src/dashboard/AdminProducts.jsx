@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../context/AuthContext';
 import { Search, Plus, Edit2, Trash2, Link, Loader2, AlertCircle } from 'lucide-react';
 import AdminAddProduct from './AdminAddProduct';
+import AdminEditProduct from './AdminEditProduct'; // Ensure this sub-component is imported
 
 const AdminProducts = () => {
     const [products, setProducts] = useState([]);
@@ -42,15 +43,12 @@ const AdminProducts = () => {
     const handleToggleActive = async (id, currentStatus) => {
         setToggleLoadingId(id);
         try {
-            // Passing the inverted binary flag back to network stream handlers
             const updatedStatus = !currentStatus;
 
-            // Sending FormData or standard partial JSON structures depending on route settings
             await api.patch(`/api/product/${id}/`, {
                 is_active: updatedStatus
             });
 
-            // Updating client DOM data architecture states node on matching criteria matrix
             setProducts(prev =>
                 prev.map(p => p.id === id ? { ...p, is_active: updatedStatus } : p)
             );
@@ -84,6 +82,9 @@ const AdminProducts = () => {
         return name.includes(search) || slug.includes(search);
     });
 
+    // ================= STEP-BASED ROUTING SECTION =================
+
+    // A. ADD PRODUCT ROUTE
     if (currentStep === 'add') {
         return (
             <AdminAddProduct
@@ -96,6 +97,28 @@ const AdminProducts = () => {
         );
     }
 
+    // B. EDIT PRODUCT ROUTE
+    if (currentStep === 'edit') {
+        return (
+            <AdminEditProduct
+                productId={selectedProductId}
+                onBack={() => {
+                    setSelectedProductId(null);
+                    setCurrentStep('list');
+                }}
+                onProductUpdated={(updatedProductInstance) => {
+                    // Instantly patch state row data matrix mapping inside client cache
+                    setProducts(prev =>
+                        prev.map(p => p.id === selectedProductId ? updatedProductInstance : p)
+                    );
+                    setSelectedProductId(null);
+                    setCurrentStep('list');
+                }}
+            />
+        );
+    }
+
+    // ================= BASE RENDER (LIST STEP) =================
     return (
         <div className="space-y-6">
             {/* Header Control Panel */}
@@ -161,7 +184,6 @@ const AdminProducts = () => {
                                     <tr key={prod.id} className="hover:bg-gray-50/30 transition-colors">
                                         <td className="p-4 pl-6">
                                             <div className="flex items-center gap-3">
-
                                                 {/* DYNAMIC PRODUCT IMAGE SLOT INSTEAD OF ICON LOGOS */}
                                                 <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm">
                                                     {prod.product_image ? (
@@ -170,7 +192,6 @@ const AdminProducts = () => {
                                                             alt={prod.name}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
-                                                                // Handle placeholder text fallback maps if url stream snaps
                                                                 e.target.onerror = null;
                                                                 e.target.src = "https://placehold.co/100x100?text=No+Image";
                                                             }}
@@ -185,7 +206,6 @@ const AdminProducts = () => {
                                                         <span className="text-sm tracking-tight text-gray-900 font-extrabold">
                                                             {prod.name}
                                                         </span>
-
                                                         {/* ACTIVE / DRAFT STATE METRIC BADGES CONTROL INTERFACES */}
                                                         <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${prod.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                                                             {prod.is_active ? 'Live' : 'Draft'}
@@ -210,7 +230,6 @@ const AdminProducts = () => {
                                         </td>
                                         <td className="p-4 pr-6 text-right">
                                             <div className="flex items-center justify-end gap-3">
-
                                                 {/* INTERACTIVE SMOOTH TOGGLE SWITCH CONTAINER TRACK SLOT */}
                                                 <div className="flex items-center gap-1.5 border-r border-gray-100 pr-3">
                                                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider hidden sm:inline">Active</span>
