@@ -11,6 +11,7 @@ import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import Cart from './pages/Cart';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="/profile" element={<Profile />} />
               <Route path="/dashboard" element={<div>Dashboard - User View</div>} />
               <Route path="/dashboard/admin" element={<AdminDashboard />} />
+              <Route path="/cart" element=<Cart /> />
             </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
