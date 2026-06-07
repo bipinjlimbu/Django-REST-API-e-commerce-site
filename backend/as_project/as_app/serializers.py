@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Category, Product, Brands
+from .models import User, Category, Product, Brands, CartItem
 
 class UserSerializer(serializers.ModelSerializer):
     
@@ -62,3 +62,8 @@ class BrandSerializer(serializers.ModelSerializer):
             return url
 
         return None
+    
+class CartItemSerializer(serializers.Serializer):
+    class Meta:
+        model = CartItem
+        fields = "__all__"
