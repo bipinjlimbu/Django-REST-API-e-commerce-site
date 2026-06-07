@@ -27,24 +27,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = "__all__"
         
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = "__all__"
-        
-    def get_product_image(self, obj):
-        request = self.context.get('request')
-
-        if obj.product_image:
-            url = obj.product_image.url
-
-            if request:
-                return request.build_absolute_uri(url)
-
-            return url
-
-        return None
-    
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brands
@@ -55,6 +37,27 @@ class BrandSerializer(serializers.ModelSerializer):
 
         if obj.brand_logo:
             url = obj.brand_logo.url
+
+            if request:
+                return request.build_absolute_uri(url)
+
+            return url
+
+        return None
+    
+class ProductSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
+    
+    class Meta:
+        model = Product
+        fields = "__all__"
+        
+    def get_product_image(self, obj):
+        request = self.context.get('request')
+
+        if obj.product_image:
+            url = obj.product_image.url
 
             if request:
                 return request.build_absolute_uri(url)
