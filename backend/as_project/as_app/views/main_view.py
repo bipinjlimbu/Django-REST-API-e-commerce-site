@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from ..models import User, Category, Product, Brands, Cart, CartItem
-from ..serializers import UserSerializer, CategorySerializer, ProductSerializer, BrandSerializer
+from ..serializers import UserSerializer, CategorySerializer, ProductSerializer, BrandSerializer, CartItemSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from ..permissions import IsAdminOrReadOnly
 import re   
@@ -358,7 +358,7 @@ def add_to_cart_view(request, product_id):
 @permission_classes([IsAuthenticated])
 def cart_view(request):
     cart_items = CartItem.objects.filter(cart=request.user.cart)
-    serialized_cart_items = ProductSerializer([item.product for item in cart_items], many=True, context={'request': request}).data
+    serialized_cart_items = CartItemSerializer(cart_items, many=True, context={'request': request}).data
     return Response({'cart_items': serialized_cart_items}, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
