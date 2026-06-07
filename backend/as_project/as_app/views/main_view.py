@@ -350,6 +350,10 @@ def add_to_cart_view(request, product_id):
         return Response({'message': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
     
     Cart.objects.get_or_create(user=request.user)
+    
+    if CartItem.objects.filter(cart=request.user.cart, product=product).exists():
+        return Response({'message': 'Product already in cart'}, status=status.HTTP_400_BAD_REQUEST)
+    
     CartItem.objects.create(cart=request.user.cart, product=product)
     
     return Response({'message': 'Product added to cart successfully'}, status=status.HTTP_200_OK)
