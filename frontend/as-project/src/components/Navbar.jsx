@@ -1,18 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../context/AuthContext'; // Tapaiko Axios instance wrapper 
 import { ShoppingCart, LogOut, Search, LogIn, UserPlus, Loader2 } from 'lucide-react';
-import axios from 'axios';
 
 const Navbar = () => {
     const { user, isAuthenticated, logout } = useAuth();
     const navigate = useNavigate();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // CART ENGINE COUNT TRACKING STATE
+    const [cartCount, setCartCount] = useState(0);
+
+    // LIVE STREAM CART ITEM COUNT FOR LOGGED IN CONSUMERS
+    useEffect(() => {
+        if (!isAuthenticated || user?.is_staff) {
+            setCartCount(0);
+            return;
+        }
+
+        const syncNavbarCartCount = () => {
+            api.get('/api/cart/')
+                .then(response => {
+                    const items = response.data?.cart_items || response.data || [];
+
+                    // Total items count tracking metrics sum matrix calculation
+                    // math logic targets item.quantity safely
+                    const totalQuantity = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+                    setCartCount(totalQuantity);
+                })
+                .catch(err => {
+                    console.error("Cart stream tracking bypass on Navbar node:", err);
+                    setCartCount(0);
+                });
+        };
+
+        syncNavbarCartCount();
+
+        // Optional: Custom events listener fallback for inter-component triggers layout
+        window.addEventListener('cartUpdated', syncNavbarCartCount);
+        return () => window.removeEventListener('cartUpdated', syncNavbarCartCount);
+
+    }, [isAuthenticated, user]);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        console.log("Searching ApexStriker for:", searchQuery);
+        if (!searchQuery.trim()) return;
+        navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     };
 
     return (
@@ -46,12 +80,16 @@ const Navbar = () => {
                     {/* Navigation Actions Profile */}
                     <div className="flex items-center space-x-4">
 
-                        {/* Shopping Cart */}
+                        {/* Shopping Cart Indicator Badge Node */}
                         <Link to="/cart" className="relative p-2 text-gray-600 hover:text-red-600 transition-colors">
                             <ShoppingCart size={22} />
-                            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                                0
-                            </span>
+
+                            {/* DYNAMIC RENDERING: Displays only if quantity > 0 */}
+                            {cartCount > 0 && (
+                                <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 py-0.5 text-[10px] font-black leading-none text-white bg-red-600 rounded-full border border-white transform translate-x-1 -translate-y-1 font-mono shadow-xs animate-in fade-in zoom-in duration-200">
+                                    {cartCount}
+                                </span>
+                            )}
                         </Link>
 
                         <div className="h-6 w-px bg-gray-200"></div>
@@ -60,7 +98,6 @@ const Navbar = () => {
                         {isAuthenticated ? (
                             /* LOGGED IN VIEW */
                             <div className="flex items-center space-x-4">
-                                {/* Clickable Avatar Profile Circle */}
                                 <Link
                                     to="/profile"
                                     className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-transparent hover:ring-red-600 transition-all overflow-hidden focus:outline-none"
