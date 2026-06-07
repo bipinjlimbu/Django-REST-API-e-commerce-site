@@ -360,3 +360,19 @@ def cart_view(request):
     cart_items = CartItem.objects.filter(cart=request.user.cart)
     serialized_cart_items = ProductSerializer([item.product for item in cart_items], many=True, context={'request': request}).data
     return Response({'cart_items': serialized_cart_items}, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_item_quantity_view(request, item_id):
+    try:
+        cart_item = CartItem.objects.get(id=item_id, cart=request.user.cart)
+    except CartItem.DoesNotExist:
+        return Response({'message': 'Cart item not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    quantity = request.data.get('quantity')
+    if quantity is not None and int(quantity) > 0:
+        cart_item.quantity = quantity
+        cart_item.save()
+        return Response({'message': 'Cart item quantity updated successfully'}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': 'Quantity must be a positive integer'}, status=status.HTTP_400_BAD_REQUEST)
