@@ -353,3 +353,10 @@ def add_to_cart_view(request, product_id):
     CartItem.objects.create(cart=request.user.cart, product=product)
     
     return Response({'message': 'Product added to cart successfully'}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cart_view(request):
+    cart_items = CartItem.objects.filter(cart=request.user.cart)
+    serialized_cart_items = ProductSerializer([item.product for item in cart_items], many=True, context={'request': request}).data
+    return Response({'cart_items': serialized_cart_items}, status=status.HTTP_200_OK)
