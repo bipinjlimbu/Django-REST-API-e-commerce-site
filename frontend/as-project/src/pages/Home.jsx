@@ -48,11 +48,11 @@ const Home = () => {
     const handleAddToCart = (productId) => {
         api.post(`/api/add-to-cart/${productId}/`)
             .then(response => {
-                alert("Product added to cart successfully!");
+                alert(response.data.message || "Product added to cart successfully!");
             })
             .catch(error => {
                 console.error("Failed to add product to cart:", error);
-                alert("Could not add product to cart. Please try again.");
+                alert(error.response?.data?.message || "Could not add product to cart. Please try again.");
             });
     };
 
