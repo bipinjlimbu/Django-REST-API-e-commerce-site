@@ -64,6 +64,8 @@ class BrandSerializer(serializers.ModelSerializer):
         return None
     
 class CartItemSerializer(serializers.Serializer):
+    product = ProductSerializer(read_only=True)
+    
     class Meta:
         model = CartItem
         fields = "__all__"
