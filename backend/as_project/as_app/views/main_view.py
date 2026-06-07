@@ -361,7 +361,7 @@ def cart_view(request):
     serialized_cart_items = CartItemSerializer(cart_items, many=True, context={'request': request}).data
     return Response({'cart_items': serialized_cart_items}, status=status.HTTP_200_OK)
 
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def update_item_quantity_view(request, item_id):
     try:
@@ -374,5 +374,8 @@ def update_item_quantity_view(request, item_id):
         cart_item.quantity = quantity
         cart_item.save()
         return Response({'message': 'Cart item quantity updated successfully'}, status=status.HTTP_200_OK)
+    elif request.method == 'DELETE':
+        cart_item.delete()
+        return Response({'message': 'Cart item deleted successfully'}, status=status.HTTP_200_OK)
     else:
         return Response({'message': 'Quantity must be a positive integer'}, status=status.HTTP_400_BAD_REQUEST)
