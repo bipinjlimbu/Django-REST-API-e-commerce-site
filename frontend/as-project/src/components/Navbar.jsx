@@ -14,6 +14,7 @@ const Navbar = () => {
 
     // LIVE STREAM CART ITEM COUNT FOR LOGGED IN CONSUMERS
     useEffect(() => {
+        // SECURITY FILTER: Customers बाहेक अरुलाई API Hit गर्न नदिने
         if (!isAuthenticated || user?.is_staff) {
             setCartCount(0);
             return;
@@ -23,9 +24,6 @@ const Navbar = () => {
             api.get('/api/cart/')
                 .then(response => {
                     const items = response.data?.cart_items || response.data || [];
-
-                    // Total items count tracking metrics sum matrix calculation
-                    // math logic targets item.quantity safely
                     const totalQuantity = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
                     setCartCount(totalQuantity);
                 })
@@ -37,7 +35,6 @@ const Navbar = () => {
 
         syncNavbarCartCount();
 
-        // Optional: Custom events listener fallback for inter-component triggers layout
         window.addEventListener('cartUpdated', syncNavbarCartCount);
         return () => window.removeEventListener('cartUpdated', syncNavbarCartCount);
 
@@ -80,24 +77,30 @@ const Navbar = () => {
                     {/* Navigation Actions Profile */}
                     <div className="flex items-center space-x-4">
 
-                        {/* Shopping Cart Indicator Badge Node */}
-                        <Link to="/cart" className="relative p-2 text-gray-600 hover:text-red-600 transition-colors">
-                            <ShoppingCart size={22} />
-
-                            {/* DYNAMIC RENDERING: Displays only if quantity > 0 */}
-                            {cartCount > 0 && (
-                                <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 py-0.5 text-[10px] font-black leading-none text-white bg-red-600 rounded-full border border-white transform translate-x-1 -translate-y-1 font-mono shadow-xs animate-in fade-in zoom-in duration-200">
-                                    {cartCount}
-                                </span>
-                            )}
-                        </Link>
-
-                        <div className="h-6 w-px bg-gray-200"></div>
+                        {/* 🎯 CUSTOMER CART GATEWAY PROTECTION */}
+                        {isAuthenticated && !user?.is_staff && (
+                            <>
+                                <Link to="/cart" className="relative p-2 text-gray-600 hover:text-red-600 transition-colors">
+                                    <ShoppingCart size={22} />
+                                    {cartCount > 0 && (
+                                        <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 py-0.5 text-[10px] font-black leading-none text-white bg-red-600 rounded-full border border-white transform translate-x-1 -translate-y-1 font-mono shadow-xs animate-in fade-in zoom-in duration-200">
+                                            {cartCount}
+                                        </span>
+                                    )}
+                                </Link>
+                                <div className="h-6 w-px bg-gray-200"></div>
+                            </>
+                        )}
 
                         {/* Conditional Rendering Authentication States */}
                         {isAuthenticated ? (
                             /* LOGGED IN VIEW */
                             <div className="flex items-center space-x-4">
+                                {user?.is_staff && (
+                                    <span className="text-[10px] font-black bg-gray-900 text-white px-2 py-1 rounded tracking-wider uppercase">
+                                        Admin Panel
+                                    </span>
+                                )}
                                 <Link
                                     to="/profile"
                                     className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-transparent hover:ring-red-600 transition-all overflow-hidden focus:outline-none"
