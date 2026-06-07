@@ -224,13 +224,8 @@ const Cart = () => {
                             </div>
                             <div className="flex justify-between text-gray-500">
                                 <span>Delivery Fee</span>
-                                <span>{deliveryCharge === 0 ? "FREE" : `Rs. ${deliveryCharge.toFixed(2)}`}</span>
+                                <span> Free </span>
                             </div>
-                            {subtotal < 5000 && subtotal > 0 && (
-                                <p className="text-[10px] text-amber-600 font-sans font-medium italic">
-                                    *Add Rs. {(5000 - subtotal).toFixed(2)} more to unlock FREE home delivery layout!
-                                </p>
-                            )}
                             <div className="border-t border-gray-200 pt-3 flex justify-between font-black text-sm sm:text-base text-gray-900">
                                 <span>Total Amount</span>
                                 <span>Rs. {totalAmount.toFixed(2)}</span>
